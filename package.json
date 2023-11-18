@@ -20,6 +20,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@auth0/nextjs-auth0": "^3.3.0",
     "@react-google-maps/api": "^2.19.2",
     "next": "^14.0.3",
     "react": "^18.2.0",

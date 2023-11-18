@@ -1,6 +1,6 @@
-// Home.tsx
+"use client";
 import React, { useState } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation'; // Importa desde next/navigation en lugar de next/router
 import Map from './map';
 
 const Home = () => {
@@ -38,7 +38,7 @@ const Home = () => {
   };
 
   return (
-    <div>
+    <main>
       <h1>Geolocalizador de Direcciones</h1>
       <input
         type="text"
@@ -49,11 +49,12 @@ const Home = () => {
       <button onClick={handleSearch}>Buscar</button>
 
       {searchSuccess && <Map searches={searches} setSearches={setSearches} />}
-    </div>
+    </main>
   );
 };
 
 export default Home;
+
 
 
 
