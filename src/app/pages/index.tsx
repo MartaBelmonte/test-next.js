@@ -1,39 +1,38 @@
+// Home.tsx
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import Map from './map';
 
 const Home = () => {
   const [address, setAddress] = useState('');
-  const [searches, setSearches] = useState([]);
+  const [searches, setSearches] = useState<string[]>([]);
   const [searchSuccess, setSearchSuccess] = useState(false);
   const router = useRouter();
 
   const handleSearch = async () => {
     if (address.trim() !== '') {
       try {
-        const response = await fetch(
-          `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-            address
-          )}&key=AIzaSyAxMst2ofWb1PLfmLH050Aee0HsyjiGibE`
-        );
-
+        const response = await fetch(`/api/geocode?address=${encodeURIComponent(address)}`);
         if (response.ok) {
           const data = await response.json();
 
           if (data.results.length > 0) {
             const location = data.results[0].geometry.location;
             setSearchSuccess(true);
-            setSearches([...searches, address]); // Agrega la dirección actual a la lista de búsquedas
+            setSearches((prevSearches) => [...prevSearches, address]);
             router.push(`/map?lat=${location.lat}&lng=${location.lng}&address=${encodeURIComponent(address)}`);
           } else {
             console.error('No se encontró información de ubicación para la dirección proporcionada.');
             alert('No se encontró información de ubicación para la dirección proporcionada.');
+            setSearchSuccess(false);
           }
         } else {
           console.error('Error al obtener datos:', response.statusText);
+          setSearchSuccess(false);
         }
       } catch (error) {
         console.error('Error:', error);
+        setSearchSuccess(false);
       }
     }
   };
@@ -49,9 +48,13 @@ const Home = () => {
       />
       <button onClick={handleSearch}>Buscar</button>
 
-      {searchSuccess && <Map searches={searches} />} {/* Pasa la lista de búsquedas al componente Map */}
+      {searchSuccess && <Map searches={searches} setSearches={setSearches} />}
     </div>
   );
 };
 
 export default Home;
+
+
+
+

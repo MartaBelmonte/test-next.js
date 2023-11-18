@@ -1,13 +1,18 @@
+// Map.tsx
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { GoogleMap, LoadScript } from '@react-google-maps/api';
 
-const Map = () => {
+interface MapProps {
+  searches: string[];
+  setSearches: React.Dispatch<React.SetStateAction<string[]>>;
+}
+
+const Map: React.FC<MapProps> = ({ searches, setSearches }) => {
   const router = useRouter();
-  const [searches, setSearches] = useState(new Set());
-  const [map, setMap] = useState(null);
-  const [address, setAddress] = useState('');
-  const [searchTimeout, setSearchTimeout] = useState(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [address, setAddress] = useState<string>('');
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const mapElement = document.getElementById('map');
@@ -16,16 +21,14 @@ const Map = () => {
       const { google } = window;
 
       const { query } = router;
-      const lat = parseFloat(query.lat) || 0;
-      const lng = parseFloat(query.lng) || 0;
+      const lat = parseFloat(query.lat as string) || 0;
+      const lng = parseFloat(query.lng as string) || 0;
       const address = query.address;
 
       if (!isNaN(lat) && !isNaN(lng) && address) {
-        const updatedSearches = new Set([...searches, address]);
-        setSearches(updatedSearches);
+        // Aquí deberías actualizar el estado de las búsquedas
       }
 
-      // Revisamos si el mapa ya fue creado
       if (!mapElement.dataset.mapInitialized) {
         const newMap = new google.maps.Map(mapElement, {
           center: { lat, lng },
@@ -34,36 +37,20 @@ const Map = () => {
 
         setMap(newMap);
 
-        // Crear el marcador
-        const marker = new google.maps.Marker({
-          map: newMap,
-          position: { lat, lng },
-        });
-
-        // Marcamos que el mapa fue inicializado
         mapElement.dataset.mapInitialized = 'true';
       }
     }
-  }, [router, map, searches]);
+  }, [router, map]);
 
-  const handleSearch = async () => {
-    if (address.trim() !== '') {
-      const updatedSearches = new Set([...searches, address]);
-      setSearches(updatedSearches);
-
-      // Realizar búsqueda en el mapa
-      await performMapSearch(address);
-    }
-  };
-
-  const performMapSearch = async (searchAddress) => {
+  const performMapSearch = async (searchAddress: string) => {
     let marker;
 
     try {
+      const apiKey = 'AIzaSyAxMst2ofWb1PLfmLH050Aee0HsyjiGibE';
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
           searchAddress
-        )}&key=AIzaSyAxMst2ofWb1PLfmLH050Aee0HsyjiGibE`
+        )}&key=${apiKey}`
       );
 
       if (response.ok) {
@@ -76,7 +63,6 @@ const Map = () => {
             map.setCenter(location);
             map.setZoom(8);
 
-            // Actualizar la posición del marcador
             marker = new window.google.maps.Marker({
               map: map,
               position: location,
@@ -93,7 +79,7 @@ const Map = () => {
     }
   };
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAddress(e.target.value);
 
     if (searchTimeout) {
@@ -105,6 +91,13 @@ const Map = () => {
     }, 500);
 
     setSearchTimeout(newTimeout);
+  };
+
+  const handleSearch = () => {
+    if (address.trim() !== '') {
+      setSearches((prevSearches) => [...prevSearches, address]);
+      performMapSearch(address);
+    }
   };
 
   return (
@@ -120,15 +113,17 @@ const Map = () => {
         <button onClick={handleSearch}>Buscar</button>
       </div>
       <div id="map" style={{ height: '400px', width: '400px' }}>
-        <GoogleMap
-          mapContainerStyle={{ height: '100%', width: '100%' }}
-          center={{ lat: 0, lng: 0 }}
-          zoom={8}
-        ></GoogleMap>
+        <LoadScript googleMapsApiKey="AIzaSyAxMst2ofWb1PLfmLH050Aee0HsyjiGibE">
+          <GoogleMap
+            mapContainerStyle={{ height: '100%', width: '100%' }}
+            center={{ lat: 0, lng: 0 }}
+            zoom={8}
+          ></GoogleMap>
+        </LoadScript>
       </div>
       <h2>Búsquedas realizadas en esta sesión:</h2>
       <ul>
-        {[...searches].map((search, index) => (
+        {searches.map((search, index) => (
           <li key={index}>{search}</li>
         ))}
       </ul>
@@ -137,3 +132,10 @@ const Map = () => {
 };
 
 export default Map;
+
+
+
+
+
+
+
